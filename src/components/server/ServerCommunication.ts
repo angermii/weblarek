@@ -1,21 +1,23 @@
-import { IProductResponce, type IApi } from "../../types";
-import { IOrderRequest } from "../../types";
-import { IOrderResponse } from "../../types";
-import { IProduct } from "../../types";
+import {
+  IProductResponce,
+  type IApi,
+  IOrderRequest,
+  IOrderResponse,
+} from "../../types";
 
 export class ServerCommunication {
-  _data: IApi;
+  private data: IApi;
 
   constructor(obj: IApi) {
-    this._data = obj;
+    this.data = obj;
   }
 
-  async getProducts(): Promise<IProduct[]> {
-    const responce = await this._data.get<IProductResponce>("/product/");
-    return responce.items;
+  async getProducts(): Promise<IProductResponce> {
+    const responce = await this.data.get<IProductResponce>("/product/");
+    return responce;
   }
 
   async createOrder(data: IOrderRequest): Promise<IOrderResponse> {
-    return this._data.post<IOrderResponse>("/order/", data);
+    return this.data.post<IOrderResponse>("/order/", data);
   }
 }

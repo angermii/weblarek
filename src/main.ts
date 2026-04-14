@@ -52,7 +52,11 @@ const api = new Api(API_URL);
 const Server = new ServerCommunication(api);
 const ServerProducts = new Products();
 
-Server.getProducts().then((products) => {
-  ServerProducts.productsArr = products;
-  console.log("продукты с сервера", ServerProducts.productsArr);
-});
+Server.getProducts()
+  .then((products) => {
+    ServerProducts.productsArr = products.items;
+    console.log("продукты с сервера", ServerProducts.productsArr);
+  })
+  .catch((error) => {
+    console.error("Произошла ошибка:", error);
+  });

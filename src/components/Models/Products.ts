@@ -1,35 +1,32 @@
 import type { IProduct } from "../../types";
 
 export class Products {
-  _productsArr: IProduct[];
-  _selectedProduct: IProduct | null;
+  private productList: IProduct[];
+  private activeProduct: IProduct | null;
 
   constructor() {
-    this._productsArr = [];
-    this._selectedProduct = null;
+    this.productList = [];
+    this.activeProduct = null;
   }
 
   set productsArr(items: IProduct[]) {
-    this._productsArr = items;
+    this.productList = items;
   }
 
   get productsArr(): IProduct[] {
-    return this._productsArr;
+    return this.productList;
   }
 
-  getProductbyID(id: string): IProduct {
-    const product = this._productsArr.find((item) => item.id === id);
-    if (!product) {
-      throw new Error(`Товар с id ${id} не найден`);
-    }
+  getProductbyID(id: string): IProduct | undefined {
+    const product = this.productList.find((item) => item.id === id);
     return product;
   }
 
   set selectedProduct(item: IProduct) {
-    this._selectedProduct = item;
+    this.activeProduct = item;
   }
 
   get selectedProduct(): IProduct | null {
-    return this._selectedProduct;
+    return this.activeProduct;
   }
 }

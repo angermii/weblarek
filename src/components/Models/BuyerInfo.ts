@@ -1,83 +1,66 @@
-import type { IBuyer } from "../../types";
-import type { TPayment } from "../../types";
+import type { IBuyer, TPayment, TErrors } from "../../types";
 
-export class BuyerInfo implements IBuyer {
-  _payment: TPayment;
-  _address: string;
-  _phone: string;
-  _email: string;
+export class BuyerInfo {
+  private personPayment: TPayment;
+  private personAddress: string;
+  private personPhone: string;
+  private personEmail: string;
 
   constructor() {
-    this._payment = "";
-    this._address = "";
-    this._phone = "";
-    this._email = "";
+    this.personPayment = "";
+    this.personAddress = "";
+    this.personPhone = "";
+    this.personEmail = "";
   }
 
   set payment(payment: TPayment) {
-    this._payment = payment;
+    this.personPayment = payment;
   }
 
   set address(address: string) {
-    this._address = address;
+    this.personAddress = address;
   }
 
   set phone(phone: string) {
-    this._phone = phone;
+    this.personPhone = phone;
   }
 
   set email(email: string) {
-    this._email = email;
+    this.personEmail = email;
   }
 
   get BuyerInfo(): IBuyer {
     return {
-      payment: this._payment,
-      address: this._address,
-      phone: this._phone,
-      email: this._email,
+      payment: this.personPayment,
+      address: this.personAddress,
+      phone: this.personPhone,
+      email: this.personEmail,
     };
   }
 
   clearBuyerInfo() {
-    this._payment = "";
-    this._address = "";
-    this._phone = "";
-    this._email = "";
+    this.personPayment = "";
+    this.personAddress = "";
+    this.personPhone = "";
+    this.personEmail = "";
   }
 
-  validate(): {
-    isValid: boolean;
-    error: {
-      payment?: string;
-      address?: string;
-      phone?: string;
-      email?: string;
-    };
-  } {
-    const errors: {
-      payment?: string;
-      address?: string;
-      phone?: string;
-      email?: string;
-    } = {};
+  validate(): TErrors {
+    const errors: TErrors = {};
 
-    if (this._payment === "") {
+    if (this.personPayment === "") {
       errors.payment = "Выберите способ оплаты";
     }
-    if (!this._address || this._address.trim() === "") {
+    if (!this.personAddress || this.personAddress.trim() === "") {
       errors.address = "Необходимо указать адрес";
     }
-    if (!this._phone || this._phone.trim() === "") {
+    if (!this.personPhone || this.personPhone.trim() === "") {
       errors.phone = "Необходимо указать телефон";
     }
-    if (!this._email || this._email.trim() === "") {
+    if (!this.personEmail || this.personEmail.trim() === "") {
       errors.email = "Необходимо указать email";
     }
 
-    return {
-      isValid: Object.keys(errors).length === 0,
-      error: errors,
-    };
+    return errors;
   }
 }

@@ -19,6 +19,7 @@ export interface IProduct {
 }
 
 export type TPayment = "card" | "cash" | "";
+export type TErrors = Partial<Record<keyof IBuyer, string>>;
 
 export interface IBuyer {
   payment: TPayment;

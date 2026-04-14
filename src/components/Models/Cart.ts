@@ -1,7 +1,7 @@
 import type { IProduct } from "../../types";
 
 export class Cart {
-  _addedToCartArr: IProduct[];
+  private _addedToCartArr: IProduct[];
 
   constructor() {
     this._addedToCartArr = [];
@@ -27,7 +27,7 @@ export class Cart {
   }
 
   clearCart() {
-    return (this._addedToCartArr = []);
+    this._addedToCartArr = [];
   }
 
   getTotalPrice(): string {
