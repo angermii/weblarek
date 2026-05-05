@@ -1,4 +1,5 @@
 import type { IBuyer, TPayment, TErrors } from "../../types";
+import { IEvents } from "../base/Events";
 
 export class BuyerInfo {
   private personPayment: TPayment;
@@ -6,30 +7,38 @@ export class BuyerInfo {
   private personPhone: string;
   private personEmail: string;
 
-  constructor() {
+  constructor(protected events: IEvents) {
     this.personPayment = "";
     this.personAddress = "";
     this.personPhone = "";
     this.personEmail = "";
   }
 
+  private emitChanged() {
+    this.events.emit("buyer:changed");
+  }
+
   set payment(payment: TPayment) {
     this.personPayment = payment;
+    this.emitChanged();
   }
 
   set address(address: string) {
     this.personAddress = address;
+    this.emitChanged();
   }
 
   set phone(phone: string) {
     this.personPhone = phone;
+    this.emitChanged();
   }
 
   set email(email: string) {
     this.personEmail = email;
+    this.emitChanged();
   }
 
-  get BuyerInfo(): IBuyer {
+  get buyerInfo(): IBuyer {
     return {
       payment: this.personPayment,
       address: this.personAddress,
@@ -43,6 +52,7 @@ export class BuyerInfo {
     this.personAddress = "";
     this.personPhone = "";
     this.personEmail = "";
+    this.emitChanged();
   }
 
   validate(): TErrors {
