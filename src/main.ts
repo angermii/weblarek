@@ -60,47 +60,27 @@ const contactsTemplate = ensureElement<HTMLTemplateElement>("#contacts");
 // производство клонов для неповторяемых сущностей
 const successView = new OrderSuccess(cloneTemplate(successTemplate), {
   onClick: () => {
-    modal.close();
-    cartModel.clearCart();
-    buyerModel.clearBuyerInfo();
-    orderView.reset();
-    contactsView.reset();
+    events.emit("modal:close");
   },
 });
 const cardPreviewView = new CardPreview(cloneTemplate(cardPreviewTemplate), {
   onBuy: () => {
-    if (!currentProduct) return;
-    if (currentProduct.price === null) return;
-    if (cartModel.hasProduct(currentProduct.id)) return;
+    const product = productsModel.selectedProduct;
+    if (!product) return;
 
-    cartModel.addProduct(currentProduct);
-    modal.close();
+    // товар в корзине
+    if (cartModel.hasProduct(product.id)) {
+      cartModel.deleteCartProduct(product);
+    } else {
+      events.emit("cart:add", product);
+    }
+
+    events.emit("modal:close");
   },
 });
 const basketView = new Basket(cloneTemplate(basketTemplate), events);
 const orderView = new FormOrder(cloneTemplate(orderTemplate), events);
 const contactsView = new FormContacts(cloneTemplate(contactsTemplate), events);
-
-//функция открытия карточки
-let currentProduct: IProduct | null = null;
-function openCardPreview(product: IProduct) {
-  currentProduct = product;
-
-  cardPreviewView.title = product.title;
-  cardPreviewView.price =
-    product.price === null ? "Бесценно" : `${product.price} синапсов`;
-  cardPreviewView.image = product.image;
-  cardPreviewView.description = product.description;
-  cardPreviewView.category = product.category;
-
-  const canAddToCart =
-    product.price !== null && !cartModel.hasProduct(product.id);
-  cardPreviewView.buttonDisabled = !canAddToCart;
-  cardPreviewView.buttonText = canAddToCart ? "Купить" : "Недоступно";
-
-  modal.content = cardPreviewView.render();
-  modal.open();
-}
 
 // подписки на изменение модели продуктов
 events.on("products:loaded", () => {
@@ -109,7 +89,9 @@ events.on("products:loaded", () => {
 
   const cardElements = products.map((product) => {
     const card = new CardCatalog(cloneTemplate(cardCatalogTemplate), {
-      onClick: () => openCardPreview(product),
+      onClick: () => {
+        productsModel.selectedProduct = product;
+      },
     });
 
     // Заполняем карточку данными
@@ -127,9 +109,11 @@ events.on("products:loaded", () => {
   gallery.catalog = cardElements;
 });
 
-events.on("cardPreview:open", (product: IProduct) => {
-  currentProduct = product;
+events.on("product:selected", (product: IProduct) => {
+  events.emit("cardPreview:open", product);
+});
 
+events.on("cardPreview:open", (product: IProduct) => {
   cardPreviewView.title = product.title;
   cardPreviewView.price =
     product.price === null ? "Бесценно" : `${product.price} синапсов`;
@@ -137,15 +121,29 @@ events.on("cardPreview:open", (product: IProduct) => {
   cardPreviewView.description = product.description;
   cardPreviewView.category = product.category;
 
-  // проверяем наличие в корзине и наличие цены, блок кнопки
-  const canAddToCart =
-    product.price !== null && !cartModel.hasProduct(product.id);
+  // проверяем наличие цены, блок кнопки
+  const canAddToCart = product.price !== null;
   cardPreviewView.buttonDisabled = !canAddToCart;
   cardPreviewView.buttonText = canAddToCart ? "Купить" : "Недоступно";
+
+  // в корзине ли?
+  const inCart = cartModel.hasProduct(product.id);
+  cardPreviewView.buttonText = inCart ? "Удалить из корзины" : "Купить";
 
   // открытие модального окна
   modal.content = cardPreviewView.render();
   modal.open();
+});
+
+// добавление товара в корзину
+
+events.on("cart:add", (product: IProduct) => {
+  if (cartModel.hasProduct(product.id)) {
+    cartModel.deleteCartProduct(product);
+  } else {
+    cartModel.addProduct(product);
+  }
+  events.emit("basket:changed");
 });
 
 events.on("modal:close", () => {
@@ -203,16 +201,12 @@ function updateFormValidity(form: Form<any>, fields: (keyof TErrors)[]) {
 
 events.on("buyer:changed", () => {
   updateFormValidity(orderView, ["payment", "address"]);
-
-  if (modal.content === contactsView.render()) {
-    updateFormValidity(contactsView, ["phone", "email"]);
-  }
+  updateFormValidity(contactsView, ["phone", "email"]);
 });
 
-// тип оплаты
+// тип оплаты, триггер ивента модели
 events.on("order:payment-change", ({ payment }: { payment: TPayment }) => {
   buyerModel.payment = payment;
-  orderView.paymentMethod = payment;
 });
 
 // адрес
@@ -241,7 +235,6 @@ events.on(
     if (field === "email") {
       buyerModel.email = value;
     }
-    updateFormValidity(contactsView, ["phone", "email"]);
   },
 );
 
@@ -261,50 +254,22 @@ events.on("contacts:submit", () => {
       console.log("успешный заказ", res);
 
       // открытие модалки успеха
+      successView.totalPrice = cartModel.getTotalPrice();
       modal.content = successView.render();
       modal.open();
-      successView.totalPrice = cartModel.getTotalPrice();
+
+      // очищение
+      cartModel.clearCart();
+      buyerModel.clearBuyerInfo();
+
+      // обновление инпутов через сеттеры
+      orderView.address = buyerModel.buyerInfo.address;
+      orderView.paymentMethod = buyerModel.buyerInfo.payment;
+      contactsView.phone = buyerModel.buyerInfo.phone;
+      contactsView.email = buyerModel.buyerInfo.email;
     })
     .catch((error) => {
       console.error(error);
       alert("Не удалось оформить заказ");
     });
 });
-
-/* // Проверка методов продукта
-productsModel.productsArr = apiProducts.items;
-console.log("Массив товаров из каталога: ", productsModel.productsArr);
-console.log(productsModel.getProductbyID(apiProducts.items[1].id));
-
-productsModel.selectedProduct = apiProducts.items[3]; // конкретный продукт
-console.log("Товар для отображения: ", productsModel.selectedProduct);
-
-// Проверка методов корзины
-cartModel.addProduct(apiProducts.items[1]);
-cartModel.addProduct(apiProducts.items[2]);
-console.log("Добавление товара в корзину", cartModel.addedToCartArr);
-console.log("Цена", cartModel.getTotalPrice());
-console.log("Количество", cartModel.getTotalAmount());
-
-cartModel.deleteCartProduct(apiProducts.items[1]); // удалили 1 продукт
-console.log("Удалили 1 продукт", cartModel.addedToCartArr);
-console.log(
-  "есть ли продукт в корзине",
-  cartModel.hasProduct(apiProducts.items[1].id),
-);
-
-cartModel.clearCart(); // очистка всей корзины
-console.log("Очистка корзины", cartModel.addedToCartArr);
-
-// Проверка методов покупателя
-buyerModel.payment = "cash";
-buyerModel.address = "1111";
-buyerModel.phone = "telephone";
-buyerModel.email = "test@test.test";
-console.log(buyerModel, " - покупатель");
-
-buyerModel.clearBuyerInfo();
-console.log("метод очистки", buyerModel);
-console.log(buyerModel.validate()); */
-
-// const ServerProducts = new Products(events);

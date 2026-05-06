@@ -11,14 +11,12 @@ export class Form<T extends IForm> extends Component<T> {
   protected submitButton: HTMLButtonElement;
   protected errorElement: HTMLElement;
   protected formInputs: HTMLInputElement[];
-  protected formElement: HTMLFormElement;
 
   constructor(
     protected events: IEvents,
     container: HTMLFormElement,
   ) {
     super(container);
-    this.formElement = container;
 
     this.submitButton = ensureElement<HTMLButtonElement>(
       "[type=submit]",
@@ -53,11 +51,5 @@ export class Form<T extends IForm> extends Component<T> {
 
   set valid(value: boolean) {
     this.submitButton.disabled = !value;
-  }
-
-  reset() {
-    this.formElement.reset();
-    this.error = [];
-    this.valid = false;
   }
 }

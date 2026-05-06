@@ -20,7 +20,7 @@ export class FormContacts extends Form<TFormContacts> {
     super(events, container);
 
     this.emailInput = ensureElement<HTMLInputElement>(
-      "[name=phone]",
+      "[name=email]",
       this.container,
     );
 

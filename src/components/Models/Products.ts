@@ -10,8 +10,8 @@ export class Products {
     this.activeProduct = null;
   }
 
-  private emitChanged(value: string) {
-    this.events.emit(value);
+  private emitChanged(value: string, item?: IProduct) {
+    this.events.emit(value, item);
   }
 
   set productsArr(items: IProduct[]) {
@@ -30,7 +30,7 @@ export class Products {
 
   set selectedProduct(item: IProduct) {
     this.activeProduct = item;
-    this.emitChanged("product:selected");
+    this.emitChanged("product:selected", item);
   }
 
   get selectedProduct(): IProduct | null {

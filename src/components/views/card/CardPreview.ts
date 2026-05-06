@@ -64,7 +64,7 @@ export class CardPreview extends Card<TCardPreview> {
   }
 
   set description(value: string) {
-    this.categoryElement.textContent = value;
+    this.descriptionElement.textContent = value;
   }
 
   set buttonText(value: string) {
