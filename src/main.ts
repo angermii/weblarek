@@ -167,7 +167,7 @@ events.on("basket:changed", () => {
     });
     card.index = index + 1;
     card.title = product.title;
-    card.price = String(product.price);
+    card.price = `${product.price} синапсов`;
 
     return card.render();
   });
@@ -202,6 +202,11 @@ function updateFormValidity(form: Form<any>, fields: (keyof TErrors)[]) {
 events.on("buyer:changed", () => {
   updateFormValidity(orderView, ["payment", "address"]);
   updateFormValidity(contactsView, ["phone", "email"]);
+
+  orderView.address = buyerModel.buyerInfo.address;
+  orderView.paymentMethod = buyerModel.buyerInfo.payment;
+  contactsView.phone = buyerModel.buyerInfo.phone;
+  contactsView.email = buyerModel.buyerInfo.email;
 });
 
 // тип оплаты, триггер ивента модели
@@ -261,12 +266,6 @@ events.on("contacts:submit", () => {
       // очищение
       cartModel.clearCart();
       buyerModel.clearBuyerInfo();
-
-      // обновление инпутов через сеттеры
-      orderView.address = buyerModel.buyerInfo.address;
-      orderView.paymentMethod = buyerModel.buyerInfo.payment;
-      contactsView.phone = buyerModel.buyerInfo.phone;
-      contactsView.email = buyerModel.buyerInfo.email;
     })
     .catch((error) => {
       console.error(error);
